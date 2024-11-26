@@ -4,7 +4,7 @@ const app = express();
 const port = process.env.PORT || 3000; // Cổng do Render hoặc dịch vụ cung cấp
 
 // MongoDB URL (thay bằng URL của bạn từ MongoDB Atlas)
-const mongoUrl = "mongodb+srv://0332708028tai:A0332708028a)@cluster0.fr7ad.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const mongoUrl = "mongodb+srv://0332708028tai:JF6EuT9ea_rzjiG@cluster0.fr7ad.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const client = new MongoClient(mongoUrl);
 
 let db, collection;
