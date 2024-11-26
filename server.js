@@ -25,16 +25,20 @@ async function connectToDB() {
     }
 }
 
-// API lấy giá trị unpack_at
+// API lấy tất cả giá trị unpack_at
 app.get('/get-unpack-at', async (req, res) => {
     try {
-        const data = await collection.findOne({});
-        if (!data || !data.unpack_at) {
-            return res.status(404).json({ error: 'unpack_at chưa được thiết lập!' });
+        const data = await collection.find({}).toArray(); // Lấy tất cả các bản ghi trong collection
+        if (!data.length) {
+            return res.status(404).json({ error: 'Không có dữ liệu unpack_at nào!' });
         }
         const currentTime = Math.floor(Date.now() / 1000); // Lấy thời gian hiện tại
-        const remainingTime = Math.max(data.unpack_at - currentTime, 0); // Tính thời gian còn lại
-        res.json({ unpackAt: data.unpack_at, remainingTime });
+        const response = data.map(item => ({
+            envelope_id: item.envelope_id,
+            unpackAt: item.unpack_at,
+            remainingTime: Math.max(item.unpack_at - currentTime, 0)
+        }));
+        res.json(response);
     } catch (err) {
         res.status(500).json({ error: 'Lỗi khi truy xuất dữ liệu!' });
     }
@@ -42,17 +46,20 @@ app.get('/get-unpack-at', async (req, res) => {
 
 // API thiết lập giá trị unpack_at
 app.post('/set-unpack-at', async (req, res) => {
-    const { unpack_at } = req.body;
+    const { unpack_at, envelope_id } = req.body;
     if (!unpack_at || isNaN(unpack_at)) {
         return res.status(400).json({ error: 'Giá trị unpack_at không hợp lệ!' });
     }
+    if (!envelope_id) {
+        return res.status(400).json({ error: 'envelope_id là bắt buộc!' });
+    }
     try {
         await collection.updateOne(
-            {}, // Không có điều kiện -> cập nhật dữ liệu duy nhất
-            { $set: { unpack_at: parseInt(unpack_at, 10) } }, // Thiết lập giá trị unpack_at
+            { envelope_id }, // Lọc theo envelope_id
+            { $set: { unpack_at: parseInt(unpack_at, 10), envelope_id } }, // Lưu dữ liệu
             { upsert: true } // Nếu không có dữ liệu, tạo mới
         );
-        res.json({ message: 'unpack_at đã được thiết lập!', unpackAt: parseInt(unpack_at, 10) });
+        res.json({ message: 'unpack_at đã được thiết lập!', envelope_id, unpackAt: parseInt(unpack_at, 10) });
     } catch (err) {
         res.status(500).json({ error: 'Lỗi khi thiết lập dữ liệu!' });
     }
