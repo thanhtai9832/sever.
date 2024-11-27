@@ -11,7 +11,13 @@ const client = new MongoClient(mongoUrl);
 let db, collection;
 
 // Middleware xử lý JSON và CORS
-app.use(cors()); // Kích hoạt CORS cho tất cả nguồn
+const corsOptions = {
+    origin: ['https://thanhtai9832.github.io'], // Chỉ cho phép domain GitHub Pages
+    methods: ['GET', 'POST'], // Chỉ cho phép các phương thức cần thiết
+    allowedHeaders: ['Content-Type'], // Cho phép các header cần thiết
+};
+
+app.use(cors(corsOptions)); // Sử dụng cấu hình CORS
 app.use(express.json());
 
 // Kết nối MongoDB
