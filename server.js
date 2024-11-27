@@ -1,9 +1,17 @@
 const express = require('express');
 const { WebSocketServer } = require('ws');
+const https = require('https');
+const fs = require('fs');
 const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Đường dẫn tới key và chứng chỉ SSL
+const options = {
+    key: fs.readFileSync('/path/to/private-key.pem'), // Thay bằng đường dẫn key
+    cert: fs.readFileSync('/path/to/certificate.pem') // Thay bằng đường dẫn certificate
+};
 
 // Middleware để xử lý JSON
 app.use(express.json());
@@ -55,10 +63,15 @@ wss.on('connection', (ws) => {
     }, 100); // Cập nhật mỗi 100ms
 });
 
-const server = app.listen(port, () => {
-    console.log(`Server đang chạy tại http://localhost:${port}`);
+// Tạo server HTTPS
+const server = https.createServer(options, app);
+
+// Lắng nghe kết nối
+server.listen(port, () => {
+    console.log(`Server đang chạy tại https://localhost:${port}`);
 });
 
+// Cấu hình WebSocket Secure
 server.on('upgrade', (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
