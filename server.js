@@ -7,7 +7,7 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Đường dẫn tới key và chứng chỉ SSL
+// Cấu hình HTTPS (dùng chứng chỉ mặc định hoặc từ Render)
 const options = {
     key: fs.readFileSync('/path/to/private-key.pem'), // Thay bằng đường dẫn key
     cert: fs.readFileSync('/path/to/certificate.pem') // Thay bằng đường dẫn certificate
@@ -16,12 +16,8 @@ const options = {
 // Middleware để xử lý JSON
 app.use(express.json());
 
-// Tạo biến lưu trữ dữ liệu từ Python
-let countdownData = {
-    unpack_at: null,
-    extra_now: null,
-    tiktok_id: null,
-};
+// Tạo danh sách lưu dữ liệu bộ đếm theo tiktok_id
+const countdownData = {};
 
 // API nhận dữ liệu từ Python
 app.post('/set-data', (req, res) => {
@@ -31,9 +27,9 @@ app.post('/set-data', (req, res) => {
         return res.status(400).json({ error: 'Thiếu thông tin cần thiết!' });
     }
 
-    // Lưu dữ liệu vào biến toàn cục
-    countdownData = { unpack_at, extra_now, tiktok_id };
-    console.log('Dữ liệu nhận được:', countdownData);
+    // Lưu dữ liệu vào danh sách theo tiktok_id
+    countdownData[tiktok_id] = { unpack_at, extra_now };
+    console.log(`Dữ liệu nhận được cho tiktok_id ${tiktok_id}:`, countdownData[tiktok_id]);
 
     res.json({ message: 'Dữ liệu đã được lưu thành công!' });
 });
@@ -44,19 +40,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 // WebSocket để gửi remainingTime
 const wss = new WebSocketServer({ noServer: true });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+    // Lấy tiktok_id từ query string
+    const tiktok_id = new URL(req.url, `https://${req.headers.host}`).searchParams.get('tiktok_id');
+
+    if (!tiktok_id || !countdownData[tiktok_id]) {
+        ws.send(JSON.stringify({ error: 'Không tìm thấy dữ liệu cho tiktok_id này!' }));
+        return ws.close();
+    }
+
     setInterval(() => {
-        if (countdownData.unpack_at && countdownData.extra_now) {
+        const data = countdownData[tiktok_id];
+        if (data) {
             const currentTime = Date.now(); // Thời gian hiện tại trên server
-            const offset = currentTime - countdownData.extra_now; // Sai lệch giữa server và extra_now
-            const remainingTime = Math.max(countdownData.unpack_at * 1000 - (currentTime - offset), 0);
+            const offset = currentTime - data.extra_now; // Sai lệch giữa server và extra_now
+            const remainingTime = Math.max(data.unpack_at * 1000 - (currentTime - offset), 0);
 
             // Gửi dữ liệu đến client qua WebSocket
             ws.send(
                 JSON.stringify({
                     remaining_time: remainingTime,
-                    tiktok_id: countdownData.tiktok_id,
-                    unpack_at: countdownData.unpack_at,
+                    tiktok_id,
+                    unpack_at: data.unpack_at,
                 })
             );
         }
@@ -66,7 +71,7 @@ wss.on('connection', (ws) => {
 // Tạo server HTTPS
 const server = https.createServer(options, app);
 
-// Lắng nghe kết nối
+// Lắng nghe kết nối HTTPS
 server.listen(port, () => {
     console.log(`Server đang chạy tại https://localhost:${port}`);
 });
