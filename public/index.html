@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bộ đếm</title>
+</head>
+<body>
+    <h1 style="text-align: center;">Bộ đếm TikTok</h1>
+    <div id="countdown" style="font-size: 48px; text-align: center; margin-top: 20px;">Đang tải...</div>
+    <div id="info" style="text-align: center; margin-top: 20px;"></div>
+
+    <script>
+        const ws = new WebSocket(`ws://${window.location.host}`);
+        const countdownElement = document.getElementById('countdown');
+        const infoElement = document.getElementById('info');
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const { remaining_time, tiktok_id, unpack_at } = data;
+
+            if (remaining_time <= 0) {
+                countdownElement.innerHTML = '<span>Hết giờ!</span>';
+            } else {
+                const totalSeconds = Math.floor(remaining_time / 1000);
+                const tenths = Math.floor((remaining_time % 1000) / 100);
+                countdownElement.innerHTML = `<span>${totalSeconds}.${tenths}s</span>`;
+            }
+
+            // Hiển thị thông tin tĩnh
+            infoElement.innerHTML = `
+                <p>ID TikTok: ${tiktok_id}</p>
+                <p>Thời gian mở: ${new Date(unpack_at * 1000).toLocaleTimeString()}</p>
+            `;
+        };
+    </script>
+</body>
+</html>
