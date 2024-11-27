@@ -1,17 +1,9 @@
 const express = require('express');
 const { WebSocketServer } = require('ws');
-const https = require('https');
-const fs = require('fs');
 const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-// Cấu hình HTTPS (dùng chứng chỉ mặc định hoặc từ Render)
-const options = {
-    key: fs.readFileSync('/path/to/private-key.pem'), // Thay bằng đường dẫn key
-    cert: fs.readFileSync('/path/to/certificate.pem') // Thay bằng đường dẫn certificate
-};
 
 // Middleware để xử lý JSON
 app.use(express.json());
@@ -42,7 +34,7 @@ const wss = new WebSocketServer({ noServer: true });
 
 wss.on('connection', (ws, req) => {
     // Lấy tiktok_id từ query string
-    const tiktok_id = new URL(req.url, `https://${req.headers.host}`).searchParams.get('tiktok_id');
+    const tiktok_id = new URL(req.url, `http://${req.headers.host}`).searchParams.get('tiktok_id');
 
     if (!tiktok_id || !countdownData[tiktok_id]) {
         ws.send(JSON.stringify({ error: 'Không tìm thấy dữ liệu cho tiktok_id này!' }));
@@ -68,12 +60,9 @@ wss.on('connection', (ws, req) => {
     }, 100); // Cập nhật mỗi 100ms
 });
 
-// Tạo server HTTPS
-const server = https.createServer(options, app);
-
-// Lắng nghe kết nối HTTPS
-server.listen(port, () => {
-    console.log(`Server đang chạy tại https://localhost:${port}`);
+// Sử dụng HTTP server thông thường (Render tự động thêm HTTPS)
+const server = app.listen(port, () => {
+    console.log(`Server đang chạy tại http://localhost:${port}`);
 });
 
 // Cấu hình WebSocket Secure
