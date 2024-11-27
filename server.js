@@ -25,20 +25,22 @@ async function connectToDB() {
     }
 }
 
-// API lấy tất cả giá trị unpack_at
+// API lấy giá trị cụ thể dựa trên unpack_at
 app.get('/get-unpack-at', async (req, res) => {
+    const { unpack_at } = req.query; // Lấy unpack_at từ query string
+    if (!unpack_at || isNaN(unpack_at)) {
+        return res.status(400).json({ error: 'Thiếu hoặc giá trị unpack_at không hợp lệ!' });
+    }
     try {
-        const data = await collection.find({}).toArray(); // Lấy tất cả các bản ghi trong collection
-        if (!data.length) {
-            return res.status(404).json({ error: 'Không có dữ liệu unpack_at nào!' });
+        const unpackAtValue = parseInt(unpack_at, 10);
+        // Tìm bản ghi với giá trị unpack_at cụ thể
+        const data = await collection.findOne({ unpack_at: unpackAtValue });
+        if (!data) {
+            return res.status(404).json({ error: `Không tìm thấy dữ liệu cho unpack_at: ${unpack_at}` });
         }
         const currentTime = Math.floor(Date.now() / 1000); // Lấy thời gian hiện tại
-        const response = data.map(item => ({
-            envelope_id: item.envelope_id,
-            unpackAt: item.unpack_at,
-            remainingTime: Math.max(item.unpack_at - currentTime, 0)
-        }));
-        res.json(response);
+        const remainingTime = Math.max(data.unpack_at - currentTime, 0); // Tính thời gian còn lại
+        res.json({ envelope_id: data.envelope_id, unpackAt: data.unpack_at, remainingTime });
     } catch (err) {
         res.status(500).json({ error: 'Lỗi khi truy xuất dữ liệu!' });
     }
