@@ -3,35 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bộ đếm</title>
+    <title>Bộ đếm TikTok</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #countdown {
+            font-size: 48px;
+            margin-top: 20px;
+            color: #000;
+        }
+        #info {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+        #loading {
+            color: gray;
+            font-size: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Bộ đếm TikTok</h1>
-    <div id="countdown" style="font-size: 48px; text-align: center; margin-top: 20px;">Đang tải...</div>
-    <div id="info" style="text-align: center; margin-top: 20px;"></div>
+    <h1>Bộ đếm TikTok</h1>
+
+    <!-- Hiển thị TikTok ID -->
+    <div id="info">
+        TikTok ID: <span id="tiktok-id">Đang tải...</span><br>
+        Rương: <span id="box-info">Đang tải...</span>
+    </div>
+
+    <!-- Hiển thị bộ đếm -->
+    <div id="countdown">Đang tải...</div>
 
     <script>
-        const ws = new WebSocket(`ws://${window.location.host}`);
+        const ws = new WebSocket('wss://' + window.location.host);
+
+        const tiktokIdElement = document.getElementById('tiktok-id');
+        const boxInfoElement = document.getElementById('box-info');
         const countdownElement = document.getElementById('countdown');
-        const infoElement = document.getElementById('info');
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const { remaining_time, tiktok_id, unpack_at } = data;
+            const { remaining_time, tiktok_id, diamond_count, people_count } = data;
 
+            // Cập nhật TikTok ID
+            tiktokIdElement.textContent = tiktok_id || 'Không xác định';
+
+            // Cập nhật thông tin rương
+            boxInfoElement.textContent = `${diamond_count || 0}/${people_count || 0}`;
+
+            // Cập nhật bộ đếm
             if (remaining_time <= 0) {
-                countdownElement.innerHTML = '<span>Hết giờ!</span>';
+                countdownElement.innerHTML = '<span style="color: red;">Hết giờ!</span>';
             } else {
                 const totalSeconds = Math.floor(remaining_time / 1000);
                 const tenths = Math.floor((remaining_time % 1000) / 100);
-                countdownElement.innerHTML = `<span>${totalSeconds}.${tenths}s</span>`;
+                countdownElement.textContent = `${totalSeconds}.${tenths}`;
             }
+        };
 
-            // Hiển thị thông tin tĩnh
-            infoElement.innerHTML = `
-                <p>ID TikTok: ${tiktok_id}</p>
-                <p>Thời gian mở: ${new Date(unpack_at * 1000).toLocaleTimeString()}</p>
-            `;
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            countdownElement.textContent = 'Lỗi kết nối!';
         };
     </script>
 </body>
