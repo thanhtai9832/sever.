@@ -70,10 +70,11 @@
                         } else {
                             const totalSeconds = Math.floor(remainingTime / 1000);
                             const tenths = Math.floor((remainingTime % 1000) / 100);
+
                             countdownElement.textContent = `${totalSeconds}.${tenths}`;
                             remainingTime -= 100; // Giảm dần mỗi 100ms
                         }
-                    }, 100);
+                    }, 100); // Chạy mỗi 100ms để đảm bảo mượt mà
                 }
             } catch (error) {
                 console.error('Lỗi khi xử lý dữ liệu WebSocket:', error);
