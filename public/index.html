@@ -38,35 +38,49 @@
     <div id="countdown">Đang tải...</div>
 
     <script>
-        const ws = new WebSocket('wss://' + window.location.host);
+        const ws = new WebSocket(`wss://${window.location.host}/?tiktok_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('tiktok_id') || 'unknown')}`);
 
         const tiktokIdElement = document.getElementById('tiktok-id');
         const boxInfoElement = document.getElementById('box-info');
         const countdownElement = document.getElementById('countdown');
 
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const { remaining_time, tiktok_id, diamond_count, people_count } = data;
+            try {
+                const data = JSON.parse(event.data);
+                const remaining_time = Number(data.remaining_time) || 0;
+                const tiktok_id = data.tiktok_id || 'Không xác định';
+                const diamond_count = Number(data.diamond_count) || 0;
+                const people_count = Number(data.people_count) || 0;
 
-            // Cập nhật TikTok ID
-            tiktokIdElement.textContent = tiktok_id || 'Không xác định';
+                // Cập nhật TikTok ID
+                tiktokIdElement.textContent = tiktok_id;
 
-            // Cập nhật thông tin rương
-            boxInfoElement.textContent = `${diamond_count || 0}/${people_count || 0}`;
+                // Cập nhật thông tin rương
+                boxInfoElement.textContent = `${diamond_count}/${people_count}`;
 
-            // Cập nhật bộ đếm
-            if (remaining_time <= 0) {
-                countdownElement.innerHTML = '<span style="color: red;">Hết giờ!</span>';
-            } else {
-                const totalSeconds = Math.floor(remaining_time / 1000);
-                const tenths = Math.floor((remaining_time % 1000) / 100);
-                countdownElement.textContent = `${totalSeconds}.${tenths}`;
+                // Cập nhật bộ đếm
+                if (remaining_time <= 0) {
+                    countdownElement.innerHTML = '<span style="color: red;">Hết giờ!</span>';
+                } else {
+                    const totalSeconds = Math.floor(remaining_time / 1000);
+                    const tenths = Math.floor((remaining_time % 1000) / 100);
+                    countdownElement.textContent = `${totalSeconds}.${tenths}`;
+                }
+            } catch (error) {
+                console.error('Lỗi khi xử lý dữ liệu WebSocket:', error);
+                countdownElement.textContent = 'Lỗi dữ liệu!';
             }
         };
 
         ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+            console.error('Lỗi WebSocket:', error.message || error);
             countdownElement.textContent = 'Lỗi kết nối!';
+        };
+
+        ws.onclose = () => {
+            countdownElement.textContent = 'Kết nối bị mất, vui lòng thử lại!';
+            tiktokIdElement.textContent = 'Không xác định';
+            boxInfoElement.textContent = '0/0';
         };
     </script>
 </body>
