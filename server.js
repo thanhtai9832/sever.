@@ -13,7 +13,7 @@ const countdownData = {};
 
 // API nhận dữ liệu từ Python
 app.post('/set-data', (req, res) => {
-    const { unpack_at, extra_now, tiktok_id } = req.body;
+    const { unpack_at, extra_now, tiktok_id, diamond_count, people_count } = req.body;
 
     if (!unpack_at || !extra_now || !tiktok_id) {
         return res.status(400).json({ error: 'Thiếu thông tin cần thiết!' });
@@ -21,7 +21,12 @@ app.post('/set-data', (req, res) => {
 
     // Tính toán end_time và lưu vào danh sách
     const end_time = unpack_at * 1000; // end_time là timestamp (ms)
-    countdownData[tiktok_id] = { end_time, extra_now };
+    countdownData[tiktok_id] = {
+        end_time,
+        extra_now,
+        diamond_count: diamond_count || 0, // Lưu diamond_count mặc định là 0 nếu không có
+        people_count: people_count || 0, // Lưu people_count mặc định là 0 nếu không có
+    };
     console.log(`Dữ liệu nhận được cho tiktok_id ${tiktok_id}:`, countdownData[tiktok_id]);
 
     res.json({ message: 'Dữ liệu đã được lưu thành công!' });
@@ -61,6 +66,8 @@ wss.on('connection', (ws, req) => {
                     remaining_time: remainingTime,
                     tiktok_id,
                     end_time: data.end_time,
+                    diamond_count: data.diamond_count, // Thêm diamond_count
+                    people_count: data.people_count, // Thêm people_count
                 })
             );
         }
