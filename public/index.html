@@ -42,7 +42,7 @@
 
     <!-- Hiển thị TikTok ID -->
     <div id="info">
-        <span class="tt-id-label">TT_id</span> -  <span id="tiktok-id" class="green-text">Đang tải...</span><br>
+        <span class="tt-id-label"></span> -  <span id="tiktok-id" class="green-text">Đang tải...</span><br>
         <span id="box-info">Đang tải...</span>
     </div>
 
@@ -84,7 +84,7 @@
                 boxInfoElement.textContent = `${diamond_count}/${people_count}`;
 
                 // Cập nhật thời gian hết hạn
-                expiryTimeElement.textContent = `End_TimeTime: ${expiry_time}`;
+                expiryTimeElement.textContent = `End_Time: ${expiry_time}`;
 
                 // Khởi động bộ đếm nếu chưa chạy
                 if (!intervalId) {
