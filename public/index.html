@@ -35,15 +35,16 @@
 
     <!-- Hiển thị TikTok ID -->
     <div id="info">
-        TikTok >  <span id="tiktok-id">Đang tải...</span><br>
-        Box:  <span id="box-info">Đang tải...</span>
+        TT_id -  <span id="tiktok-id" class="green-text">Đang tải...</span><br>
+        <span id="box-info">Đang tải...</span>
     </div>
 
     <!-- Hiển thị bộ đếm -->
     <div id="countdown">Đang tải...</div>
 
     <!-- Hiển thị thời gian hết hạn -->
-    <div id="expiry-time">Thời gian hết hạn: Đang tải...</div>
+    <div id="expiry-time" style="font-size: 30px; font-weight: bold;">Đang tải...</div>
+
 
     <script>
         const ws = new WebSocket(`wss://${window.location.host}/?tiktok_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('tiktok_id') || 'unknown')}`);
