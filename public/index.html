@@ -116,8 +116,6 @@
             console.error('Kết nối WebSocket đã đóng');
             countdownElement.textContent = 'Kết nối bị mất, vui lòng thử lại!';
             tiktokIdElement.textContent = 'Không xác định';
-            boxInfoElement.textContent = '0/0';
-            expiryTimeElement.textContent = 'Thời gian hết hạn: Không xác định';
             if (intervalId) clearInterval(intervalId); // Dừng bộ đếm nếu kết nối bị mất
         };
     </script>
