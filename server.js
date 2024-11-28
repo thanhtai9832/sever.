@@ -19,8 +19,11 @@ app.post('/set-data', (req, res) => {
         return res.status(400).json({ error: 'Thiếu thông tin cần thiết!' });
     }
 
+    // Tính toán end_time dựa trên unpack_at
+    const end_time = unpack_at * 1000; // Chuyển sang mili giây
+
     // Lưu dữ liệu vào danh sách theo tiktok_id
-    countdownData[tiktok_id] = { unpack_at, extra_now };
+    countdownData[tiktok_id] = { end_time, extra_now };
     console.log(`Dữ liệu nhận được cho tiktok_id ${tiktok_id}:`, countdownData[tiktok_id]);
 
     res.json({ message: 'Dữ liệu đã được lưu thành công!' });
@@ -41,19 +44,27 @@ wss.on('connection', (ws, req) => {
         return ws.close();
     }
 
+    const data = countdownData[tiktok_id];
+
+    // Gửi dữ liệu tĩnh ban đầu đến client
+    ws.send(
+        JSON.stringify({
+            end_time: data.end_time,
+            tiktok_id,
+        })
+    );
+
+    // Cập nhật remainingTime định kỳ
     setInterval(() => {
-        const data = countdownData[tiktok_id];
         if (data) {
             const currentTime = Date.now(); // Thời gian hiện tại trên server
-            const offset = currentTime - data.extra_now; // Sai lệch giữa server và extra_now
-            const remainingTime = Math.max(data.unpack_at * 1000 - (currentTime - offset), 0);
+            const remainingTime = Math.max(data.end_time - currentTime, 0);
 
-            // Gửi dữ liệu đến client qua WebSocket
+            // Gửi remainingTime đến client qua WebSocket
             ws.send(
                 JSON.stringify({
                     remaining_time: remainingTime,
                     tiktok_id,
-                    unpack_at: data.unpack_at,
                 })
             );
         }
