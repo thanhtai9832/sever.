@@ -38,7 +38,7 @@
     <div id="countdown">Đang tải...</div>
 
     <script>
-        const ws = new WebSocket(wss://${window.location.host}/?tiktok_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('tiktok_id') || 'unknown')});
+        const ws = new WebSocket(`ws://${window.location.host}/?tiktok_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('tiktok_id') || 'unknown')}`);
 
         const tiktokIdElement = document.getElementById('tiktok-id');
         const boxInfoElement = document.getElementById('box-info');
@@ -46,6 +46,10 @@
 
         let remainingTime = null; // Biến lưu giá trị thời gian còn lại
         let intervalId = null; // Biến lưu ID của setInterval
+
+        ws.onopen = () => {
+            console.log('WebSocket đã kết nối');
+        };
 
         ws.onmessage = (event) => {
             try {
@@ -59,7 +63,7 @@
                 tiktokIdElement.textContent = tiktok_id;
 
                 // Cập nhật thông tin rương
-                boxInfoElement.textContent = ${diamond_count}/${people_count};
+                boxInfoElement.textContent = `${diamond_count}/${people_count}`;
 
                 // Khởi động bộ đếm nếu chưa chạy
                 if (!intervalId) {
@@ -71,7 +75,7 @@
                             const totalSeconds = Math.floor(remainingTime / 1000);
                             const tenths = Math.floor((remainingTime % 1000) / 100);
 
-                            countdownElement.textContent = ${totalSeconds}.${tenths};
+                            countdownElement.textContent = `${totalSeconds}.${tenths}`;
                             remainingTime -= 100; // Giảm dần mỗi 100ms
                         }
                     }, 100); // Chạy mỗi 100ms để đảm bảo mượt mà
@@ -88,6 +92,7 @@
         };
 
         ws.onclose = () => {
+            console.error('Kết nối WebSocket đã đóng');
             countdownElement.textContent = 'Kết nối bị mất, vui lòng thử lại!';
             tiktokIdElement.textContent = 'Không xác định';
             boxInfoElement.textContent = '0/0';
