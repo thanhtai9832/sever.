@@ -28,7 +28,7 @@ app.post('/set-data', (req, res) => {
         diamond_count: diamond_count || 0, // Lưu diamond_count mặc định là 0 nếu không có
         people_count: people_count || 0, // Lưu people_count mặc định là 0 nếu không có
     };
-    console.log(Dữ liệu nhận được cho tiktok_id ${tiktok_id}:, countdownData[tiktok_id]);
+    console.log(`Dữ liệu nhận được cho tiktok_id ${tiktok_id}:`, countdownData[tiktok_id]);
 
     res.json({ message: 'Dữ liệu đã được lưu thành công!' });
 });
@@ -41,7 +41,7 @@ const wss = new WebSocketServer({ noServer: true });
 
 wss.on('connection', (ws, req) => {
     // Lấy tiktok_id từ query string
-    const tiktok_id = new URL(req.url, http://${req.headers.host}).searchParams.get('tiktok_id');
+    const tiktok_id = new URL(req.url, `http://${req.headers.host}`).searchParams.get('tiktok_id');
 
     if (!tiktok_id || !countdownData[tiktok_id]) {
         ws.send(JSON.stringify({ error: 'Không tìm thấy dữ liệu cho tiktok_id này!' }));
@@ -78,7 +78,7 @@ wss.on('connection', (ws, req) => {
 
 // Sử dụng HTTP server thông thường (Render tự động thêm HTTPS)
 const server = app.listen(port, () => {
-    console.log(Server đang chạy tại http://localhost:${port});
+    console.log(`Server đang chạy tại http://localhost:${port}`);
 });
 
 // Cấu hình WebSocket Secure
