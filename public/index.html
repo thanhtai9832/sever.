@@ -55,7 +55,13 @@
 
 
     <script>
-        const ws = new WebSocket(`wss://${window.location.host}/?tiktok_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('tiktok_id') || 'unknown')}`);
+        // Lấy tiktok_id và extra_now từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tiktokId = urlParams.get('tiktok_id') || 'unknown';
+        const extraNow = urlParams.get('extra_now') || 'unknown';
+
+        // Kết nối WebSocket với cả tiktok_id và extra_now
+        const ws = new WebSocket(`wss://${window.location.host}/?tiktok_id=${encodeURIComponent(tiktokId)}&extra_now=${encodeURIComponent(extraNow)}`);
 
         const tiktokIdElement = document.getElementById('tiktok-id');
         const boxInfoElement = document.getElementById('box-info');
@@ -95,15 +101,16 @@
                 // Khởi động bộ đếm nếu chưa chạy
                 if (!intervalId) {
                     intervalId = setInterval(() => {
-                        if (remainingTime <= 0) {
+                        const currentTime = Date.now(); // Lấy thời gian thực tế
+                        const elapsedTime = remainingTime - (Date.now() - currentTime);
+                        if (elapsedTime <= 0) {
                             countdownElement.innerHTML = '<span style="color: black;">00.0</span>';
                             clearInterval(intervalId); // Dừng bộ đếm khi hết thời gian
                         } else {
-                            const totalSeconds = Math.floor(remainingTime / 1000);
-                            const tenths = Math.floor((remainingTime % 1000) / 100);
+                            const totalSeconds = Math.floor(elapsedTime / 1000);
+                            const tenths = Math.floor((elapsedTime % 1000) / 100);
 
                             countdownElement.textContent = `${totalSeconds}.${tenths}`;
-                            remainingTime -= 100; // Giảm dần mỗi 100ms
                         }
                     }, 100); // Chạy mỗi 100ms để đảm bảo mượt mà
                 }
