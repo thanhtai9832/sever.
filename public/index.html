@@ -96,7 +96,7 @@
                 if (!intervalId) {
                     intervalId = setInterval(() => {
                         if (remainingTime <= 0) {
-                            countdownElement.innerHTML = '<span style="color: black;">Hết giờ!</span>';
+                            countdownElement.innerHTML = '<span style="color: black;">00.0</span>';
                             clearInterval(intervalId); // Dừng bộ đếm khi hết thời gian
                         } else {
                             const totalSeconds = Math.floor(remainingTime / 1000);
