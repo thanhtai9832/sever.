@@ -30,46 +30,40 @@
             color: gray;
         }
         .green-text {
-            color: green; /* Đổi màu chữ thành xanh lá */
-            font-weight: bold; /* Làm chữ đậm */
+            color: green; 
+            font-weight: bold;
         }
         .tt-id-label {
-            color: green; /* Đổi màu chữ "TT_id" thành xanh lá */
+            color: green; 
         }
     </style>
 </head>
 <body>
     <h1>Bộ đếm</h1>
 
-    <!-- Hiển thị TikTok ID -->
+   
     <div id="info">
         <span class="tt-id-label"></span> -  <span id="tiktok-id" class="green-text">Đang tải...</span><br>
         <span id="box-info">Đang tải...</span>
     </div>
 
-    <!-- Hiển thị bộ đếm -->
+    
     <div id="countdown">Đang tải...</div>
 
-    <!-- Hiển thị thời gian hết hạn -->
+    
     <div id="expiry-time" style="font-size: 30px; font-weight: bold;">Đang tải...</div>
 
 
     <script>
-        // Lấy tiktok_id và extra_now từ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const tiktokId = urlParams.get('tiktok_id') || 'unknown';
-        const extraNow = urlParams.get('extra_now') || 'unknown';
-
-        // Kết nối WebSocket với cả tiktok_id và extra_now
-        const ws = new WebSocket(`wss://${window.location.host}/?tiktok_id=${encodeURIComponent(tiktokId)}&extra_now=${encodeURIComponent(extraNow)}`);
+        const ws = new WebSocket(`wss://${window.location.host}/?tiktok_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('tiktok_id') || 'unknown')}`);
 
         const tiktokIdElement = document.getElementById('tiktok-id');
         const boxInfoElement = document.getElementById('box-info');
         const countdownElement = document.getElementById('countdown');
         const expiryTimeElement = document.getElementById('expiry-time');
 
-        let remainingTime = null; // Biến lưu giá trị thời gian còn lại
-        let intervalId = null; // Biến lưu ID của setInterval
+        let remainingTime = null; 
+        let intervalId = null; 
 
         ws.onopen = () => {
             console.log('WebSocket đã kết nối');
@@ -85,34 +79,33 @@
                 const people_count = Number(data.people_count) || 0;
                 const expiry_time = data.expiry_time || 'Không xác định';
 
-                // Cập nhật TikTok ID
+                
                 tiktokIdElement.textContent = tiktok_id;
 
-                // Cập nhật thông tin rương (nếu có)
+                
                 if (diamond_count !== 0 || people_count !== 0) {
                     boxInfoElement.textContent = `${diamond_count}/${people_count}`;
                 }
 
-                // Cập nhật thời gian hết hạn (nếu có)
+               
                 if (expiry_time !== 'Không xác định') {
                     expiryTimeElement.textContent = `End_Time: ${expiry_time}`;
                 }
 
-                // Khởi động bộ đếm nếu chưa chạy
+                
                 if (!intervalId) {
                     intervalId = setInterval(() => {
-                        const currentTime = Date.now(); // Lấy thời gian thực tế
-                        const elapsedTime = remainingTime - (Date.now() - currentTime);
-                        if (elapsedTime <= 0) {
+                        if (remainingTime <= 0) {
                             countdownElement.innerHTML = '<span style="color: black;">00.0</span>';
-                            clearInterval(intervalId); // Dừng bộ đếm khi hết thời gian
+                            clearInterval(intervalId); 
                         } else {
-                            const totalSeconds = Math.floor(elapsedTime / 1000);
-                            const tenths = Math.floor((elapsedTime % 1000) / 100);
+                            const totalSeconds = Math.floor(remainingTime / 1000);
+                            const tenths = Math.floor((remainingTime % 1000) / 100);
 
                             countdownElement.textContent = `${totalSeconds}.${tenths}`;
+                            remainingTime -= 100; 
                         }
-                    }, 100); // Chạy mỗi 100ms để đảm bảo mượt mà
+                    }, 100); 
                 }
             } catch (error) {
                 console.error('Lỗi khi xử lý dữ liệu WebSocket:', error);
@@ -129,7 +122,7 @@
             console.error('Kết nối WebSocket đã đóng');
             countdownElement.textContent = 'Kết nối bị mất, vui lòng thử lại!';
             tiktokIdElement.textContent = 'Không xác định';
-            if (intervalId) clearInterval(intervalId); // Dừng bộ đếm nếu kết nối bị mất
+            if (intervalId) clearInterval(intervalId); 
         };
     </script>
 </body>
