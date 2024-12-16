@@ -16,11 +16,9 @@ app.post('/set-data', (req, res) => {
         return res.status(400).json({ error: 'Thiếu thông tin cần thiết!' });
     }
 
-    const time_id = `time_${envelope_id.slice(-6)}`;
     const end_time = unpack_at * 1000; // Chuyển thành mili giây
 
-    // Lưu dữ liệu vào countdownData
-    countdownData[time_id] = {
+    countdownData[envelope_id] = {
         end_time,
         extra_now,
         expiry_time,
@@ -28,33 +26,30 @@ app.post('/set-data', (req, res) => {
         people_count: people_count || 0,
     };
 
-    console.log(`Dữ liệu nhận được cho time_id ${time_id}:`, countdownData[time_id]);
-    res.json({ message: 'Dữ liệu đã được lưu thành công!', time_id });
+    console.log(`Dữ liệu nhận được cho envelope_id ${envelope_id}:`, countdownData[envelope_id]);
+    res.json({ message: 'Dữ liệu đã được lưu thành công!', envelope_id });
 });
 
-// Phục vụ file tĩnh trong thư mục public
 app.use(express.static(path.join(__dirname, 'public')));
 
 const wss = new WebSocketServer({ noServer: true });
 
 wss.on('connection', (ws, req) => {
-    const time_id = new URL(req.url, `http://${req.headers.host}`).searchParams.get('time_id');
+    const envelope_id = new URL(req.url, `http://${req.headers.host}`).searchParams.get('envelope_id');
 
-    // Kiểm tra dữ liệu tương ứng
-    if (!time_id || !countdownData[time_id]) {
-        ws.send(JSON.stringify({ error: 'Không tìm thấy dữ liệu cho time_id này!' }));
+    if (!envelope_id || !countdownData[envelope_id]) {
+        ws.send(JSON.stringify({ error: 'Không tìm thấy dữ liệu cho envelope_id này!' }));
         return ws.close();
     }
 
-    const data = countdownData[time_id];
+    const data = countdownData[envelope_id];
 
-    // Gửi dữ liệu đếm ngược cho client
     const intervalId = setInterval(() => {
         const currentTime = Date.now();
         const remainingTime = Math.max(data.end_time - currentTime, 0);
 
         if (remainingTime === 0) {
-            ws.send(JSON.stringify({ status: 'Hết giờ', time_id }));
+            ws.send(JSON.stringify({ status: 'Hết giờ', envelope_id }));
             clearInterval(intervalId);
             return;
         }
@@ -62,7 +57,7 @@ wss.on('connection', (ws, req) => {
         ws.send(
             JSON.stringify({
                 remaining_time: remainingTime,
-                time_id,
+                envelope_id,
                 expiry_time: data.expiry_time,
                 end_time: data.end_time,
                 diamond_count: data.diamond_count,
@@ -73,16 +68,14 @@ wss.on('connection', (ws, req) => {
 
     ws.on('close', () => {
         clearInterval(intervalId);
-        console.log(`Kết nối đã đóng cho time_id: ${time_id}`);
+        console.log(`Kết nối đã đóng cho envelope_id: ${envelope_id}`);
     });
 });
 
-// Lắng nghe server
 const server = app.listen(port, () => {
     console.log(`Server đang chạy tại http://localhost:${port}`);
 });
 
-// Xử lý kết nối WebSocket
 server.on('upgrade', (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
