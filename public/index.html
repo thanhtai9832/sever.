@@ -55,8 +55,7 @@
 
 
     <script>
-        const ws = new WebSocket(`wss://${window.location.host}/?tiktok_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('tiktok_id') || 'unknown')}`);
-
+        const ws = new WebSocket(`wss://${window.location.host}/?time_id=${encodeURIComponent(new URLSearchParams(window.location.search).get('time_id') || 'unknown')}`);
         const tiktokIdElement = document.getElementById('tiktok-id');
         const boxInfoElement = document.getElementById('box-info');
         const countdownElement = document.getElementById('countdown');
@@ -74,7 +73,8 @@
                 const data = JSON.parse(event.data);
                 remainingTime = Number(data.remaining_time) || 0;
 
-                const tiktok_id = data.tiktok_id || 'Không xác định';
+                const tiktok_id = data.time_id || 'Không xác định'; // Sử dụng time_id để thay thế
+                tiktokIdElement.textContent = tiktok_id;
                 const diamond_count = Number(data.diamond_count) || 0;
                 const people_count = Number(data.people_count) || 0;
                 const expiry_time = data.expiry_time || 'Không xác định';
