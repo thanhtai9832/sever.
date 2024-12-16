@@ -22,6 +22,7 @@ app.post('/set-data', (req, res) => {
 
     // Lưu dữ liệu vào countdownData
     countdownData[time_id] = {
+        tiktok_id,
         end_time,
         extra_now,
         expiry_time,
@@ -68,7 +69,7 @@ wss.on('connection', (ws, req) => {
         ws.send(
             JSON.stringify({
                 remaining_time: remainingTime,
-                time_id,
+                tiktok_id,
                 expiry_time: data.expiry_time,
                 end_time: data.end_time,
                 diamond_count: data.diamond_count,
