@@ -73,7 +73,7 @@
                 const data = JSON.parse(event.data);
                 remainingTime = Number(data.remaining_time) || 0;
 
-                const tiktok_id = data.time_id || 'Không xác định'; // Sử dụng time_id để thay thế
+                const tiktok_id = data.tiktok_id || 'Không xác định';
                 tiktokIdElement.textContent = tiktok_id;
                 const diamond_count = Number(data.diamond_count) || 0;
                 const people_count = Number(data.people_count) || 0;
