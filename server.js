@@ -10,17 +10,16 @@ app.use(express.json());
 const countdownData = {};
 
 app.post('/set-data', (req, res) => {
-    const { unpack_at, extra_now, envelope_id, diamond_count, people_count, expiry_time } = req.body;
+    const { unpack_at, extra_now, envelope_id, diamond_count, people_count, expiry_time, tiktok_id } = req.body;
 
-    if (!unpack_at || !extra_now || !envelope_id) {
-        console.error("Thiếu thông tin bắt buộc:", { unpack_at, extra_now, envelope_id });
+    if (!unpack_at || !extra_now || !envelope_id || !tiktok_id) {
+        console.error("Thiếu thông tin bắt buộc:", { unpack_at, extra_now, envelope_id, tiktok_id });
         return res.status(400).json({ error: 'Thiếu thông tin cần thiết!' });
     }
 
-    const time_id = envelope_id; 
-    const end_time = unpack_at * 1000; 
+    const time_id = envelope_id;
+    const end_time = unpack_at * 1000;
 
-    // Lưu dữ liệu vào countdownData
     countdownData[time_id] = {
         tiktok_id,
         end_time,
@@ -34,10 +33,8 @@ app.post('/set-data', (req, res) => {
     res.json({ message: 'Dữ liệu đã được lưu thành công!', time_id });
 });
 
-// Phục vụ file tĩnh
 app.use(express.static(path.join(__dirname, 'public')));
 
-// WebSocket Server
 const wss = new WebSocketServer({ noServer: true });
 
 wss.on('connection', (ws, req) => {
@@ -47,29 +44,30 @@ wss.on('connection', (ws, req) => {
     console.log(`Kết nối mới với time_id: ${time_id}`);
 
     if (!time_id || !countdownData[time_id]) {
-        ws.send(JSON.stringify({ error: 'Không tìm thấy dữ liệu cho time_id này!' }));
-        console.error(`Không tìm thấy dữ liệu cho time_id: ${time_id}`);
+        const errorMessage = `Không tìm thấy dữ liệu cho time_id: ${time_id}`;
+        ws.send(JSON.stringify({ error: errorMessage }));
+        console.error(errorMessage);
         return ws.close();
     }
 
     const data = countdownData[time_id];
 
-    // Gửi dữ liệu đếm ngược
     const intervalId = setInterval(() => {
         const currentTime = Date.now();
         const remainingTime = Math.max(data.end_time - currentTime, 0);
 
         if (remainingTime === 0) {
             ws.send(JSON.stringify({ status: 'Hết giờ', time_id }));
+            delete countdownData[time_id];
             clearInterval(intervalId);
-            console.log(`Time_id ${time_id} đã hết giờ.`);
+            console.log(`Time_id ${time_id} đã hết giờ và dữ liệu đã được xóa.`);
             return;
         }
 
         ws.send(
             JSON.stringify({
                 remaining_time: remainingTime,
-                tiktok_id,
+                tiktok_id: data.tiktok_id,
                 expiry_time: data.expiry_time,
                 end_time: data.end_time,
                 diamond_count: data.diamond_count,
@@ -78,7 +76,6 @@ wss.on('connection', (ws, req) => {
         );
     }, 100);
 
-    // Dọn dẹp khi kết nối WebSocket đóng
     ws.on('close', () => {
         clearInterval(intervalId);
         console.log(`Kết nối đã đóng cho time_id: ${time_id}`);
