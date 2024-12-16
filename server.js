@@ -16,7 +16,7 @@ app.post('/set-data', (req, res) => {
         return res.status(400).json({ error: 'Thiếu thông tin cần thiết!' });
     }
 
-    const time_id = time_${envelope_id.slice(-6)};
+    const time_id = `time_${envelope_id.slice(-6)}`;
     const end_time = unpack_at * 1000; 
 
     countdownData[time_id] = {
