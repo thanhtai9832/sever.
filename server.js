@@ -26,7 +26,7 @@ app.post('/set-data', (req, res) => {
         diamond_count: diamond_count || 0,
         people_count: people_count || 0,
     };
-    console.log(Dữ liệu nhận được cho time_id ${time_id}:, countdownData[time_id]);
+    console.log(`Dữ liệu nhận được cho time_id ${time_id}:`, countdownData[time_id]);
 
     res.json({ message: 'Dữ liệu đã được lưu thành công!', time_id });
 });
